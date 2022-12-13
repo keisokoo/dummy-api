@@ -1,16 +1,17 @@
 import express from 'express'
-import { sampleUserList, sampleUserType } from '../lib/samples'
+import { example, sampleUserList, sampleUserType } from '../lib/samples'
 
 const router = express.Router()
 
 const listTargetType = {
   user: sampleUserList,
+  prod: example,
 } as const
-
-const isTargetType = (value: string): value is keyof typeof listTargetType => {
+type SampleListObjectType = typeof listTargetType
+const isTargetType = (value: string): value is keyof SampleListObjectType => {
   return (
     value !== undefined &&
-    listTargetType[value as keyof typeof listTargetType] !== undefined
+    listTargetType[value as keyof SampleListObjectType] !== undefined
   )
 }
 export interface TestResponse {
@@ -19,6 +20,11 @@ export interface TestResponse {
   success: boolean
   total: number
   _next: number
+}
+
+type GetList<T> = <K extends keyof T>(item: T, target: K) => T[K]
+const getList: GetList<SampleListObjectType> = (item, target) => {
+  return item[target]
 }
 router.get('/:type/:id', (req, res, next) => {
   const target = req.params.type
@@ -31,7 +37,7 @@ router.get('/:type/:id', (req, res, next) => {
     })
     return
   }
-  const dummyList = listTargetType[target]
+  const dummyList: { id: number }[] = getList(listTargetType, target)
   if (!dummyList.some((item) => item.id === id)) {
     res.json({
       message: 'Not Found Api',
@@ -58,7 +64,7 @@ router.get('/:type', (req, res, next) => {
     })
     return
   }
-  const dummyList = listTargetType[target]
+  const dummyList: { id: number }[] = getList(listTargetType, target)
 
   const searchTerm = (req.query.search ?? '') as string
   const limit = Number(req.query.limit) ? Number(req.query.limit) : 12
