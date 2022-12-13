@@ -74,7 +74,7 @@ router.patch('/:id', authMiddleWare, (req, res, next) => {
     })
   })
 })
-router.get('/:post_id', (req, res, next) => {
+router.get('/:post_id', authMiddleWare, (req, res, next) => {
   let sql = 'select * from post where id =?'
   db.get(sql, [req.params.post_id], (err, result) => {
     if (err) {
@@ -88,7 +88,7 @@ router.get('/:post_id', (req, res, next) => {
     })
   })
 })
-router.get('/', (req, res, next) => {
+router.get('/', authMiddleWare, (req, res, next) => {
   const limit =
     req.query.limit &&
     Number(req.query.limit) > 0 &&

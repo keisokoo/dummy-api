@@ -26,36 +26,44 @@ router.post('/refresh', (req, res, next) => {
         expiredIn: dayjs().add(3, 'minute').valueOf(),
       })
     } else {
-      res.status(401).json({ message: '유효하지 않은 토큰 값.' })
+      res
+        .status(401)
+        .json({ message: '유효하지 않은 토큰 값.', success: false })
       return
     }
   } catch (error: any) {
-    res.status(401).json({ message: error?.message ?? 'error' })
+    res.status(401).json({ message: error?.message ?? 'error', success: false })
     return
   }
 })
 router.post('/login', (req, res, next) => {
   const { username, password } = req.body
+  console.log(req.body)
+
   if (!username) {
-    res.status(404).json({ message: '이름 입력 필요' })
+    res.status(404).json({ message: '이름 입력 필요', success: false })
     return
   }
   if (!password) {
-    res.status(404).json({ message: '암호 입력 필요' })
+    res.status(404).json({ message: '암호 입력 필요', success: false })
     return
   }
   const sql = `select * from user where name = ?`
   const params = [username]
   db.get(sql, params, (err, result) => {
     if (err) {
-      res
-        .status(404)
-        .json({ message: '일치하는 값이 없습니다.', error: err.message })
+      res.status(404).json({
+        message: '일치하는 값이 없습니다.',
+        error: err.message,
+        success: false,
+      })
       return
     }
 
     if (md5(password) !== result.password) {
-      res.status(401).json({ message: '일치하는 값이 없습니다.' })
+      res
+        .status(401)
+        .json({ message: '일치하는 값이 없습니다.', success: false })
       return
     }
     const userInfo = { username: result.name, id: result.id }
@@ -67,9 +75,12 @@ router.post('/login', (req, res, next) => {
     })
     res.json({
       message: 'success',
-      token,
-      refreshToken: rfToken,
-      expiredIn: dayjs().add(3, 'minute').valueOf(),
+      data: {
+        token,
+        refreshToken: rfToken,
+        expiredIn: dayjs().add(3, 'minute').valueOf(),
+      },
+      success: true,
     })
   })
 })
@@ -84,6 +95,7 @@ router.get('/', authMiddleWare, (req, res, next) => {
     res.json({
       message: 'success',
       data: rows[0],
+      success: true,
     })
   })
 })
