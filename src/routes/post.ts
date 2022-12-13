@@ -11,22 +11,25 @@ router.delete('/:id', authMiddleWare, (req, res, next) => {
   const sqlGet = `SELECT id FROM post WHERE id=${id}`
   db.get(sqlGet, [], (err, result) => {
     if (err) {
-      res.status(400).json({ message: err.message })
+      res.status(400).json({ message: err.message, success: false })
       return
     }
     if (!result) {
-      res.status(400).json({ message: '유효하지 않은 id입니다.' })
+      res
+        .status(400)
+        .json({ message: '유효하지 않은 id입니다.', success: false })
       return
     }
     const insert = `DELETE FROM post WHERE id =${id}`
     db.run(insert, [], (err) => {
       if (err) {
-        res.status(400).json({ message: err.message })
+        res.status(400).json({ message: err.message, success: false })
         return
       }
       res.json({
         message: 'success',
         data: id,
+        success: true,
       })
     })
   })
@@ -36,32 +39,37 @@ router.patch('/:id', authMiddleWare, (req, res, next) => {
   const { state } = req.body
 
   if (!state) {
-    res.status(400).json({ message: 'state값이 없습니다.' })
+    res.status(400).json({ message: 'state값이 없습니다.', success: false })
     return
   }
   if (!isState(state)) {
-    res.status(400).json({ message: '유효한 state가 아닙니다.' })
+    res
+      .status(400)
+      .json({ message: '유효한 state가 아닙니다.', success: false })
     return
   }
   const sqlGet = `SELECT id FROM post WHERE id=${id}`
   db.get(sqlGet, [], (err, result) => {
     if (err) {
-      res.status(400).json({ message: err.message })
+      res.status(400).json({ message: err.message, success: false })
       return
     }
     if (!result) {
-      res.status(400).json({ message: '유효하지 않은 id입니다.' })
+      res
+        .status(400)
+        .json({ message: '유효하지 않은 id입니다.', success: false })
       return
     }
     const insert = `update post set state = '${state}' where id = ${id}`
     db.run(insert, [], (updateError) => {
       if (updateError) {
-        res.status(400).json({ message: updateError.message })
+        res.status(400).json({ message: updateError.message, success: false })
         return
       }
       res.json({
         message: 'success',
         data: id,
+        success: true,
       })
     })
   })
@@ -70,7 +78,7 @@ router.get('/:post_id', (req, res, next) => {
   let sql = 'select * from post where id =?'
   db.get(sql, [req.params.post_id], (err, result) => {
     if (err) {
-      res.status(400).json({ message: err.message })
+      res.status(400).json({ message: err.message, success: false })
       return
     }
     res.json({
@@ -108,15 +116,16 @@ router.get('/', (req, res, next) => {
         .json({ message: err ? err.message : 'Not Found.', success: false })
       return
     }
-    console.log('result', result)
 
     if (!result) {
       res.json({
         message: 'success',
-        data: [],
+        data: {
+          list: [],
+          total: 0,
+          _next: null,
+        },
         success: true,
-        total: 0,
-        _next: null,
       })
       return
     }
@@ -134,15 +143,17 @@ router.get('/', (req, res, next) => {
       setTimeout(() => {
         res.json({
           message: 'success',
-          data: rows,
+          data: {
+            list: rows,
+            total: count,
+            _next:
+              limit === rows.length &&
+              typeof nextCursor === 'number' &&
+              result.id !== nextCursor
+                ? nextCursor
+                : null,
+          },
           success: true,
-          total: count,
-          _next:
-            limit === rows.length &&
-            typeof nextCursor === 'number' &&
-            result.id !== nextCursor
-              ? nextCursor
-              : null,
         })
       }, 300)
     })

@@ -59,8 +59,6 @@ router.get('/:type', (req, res, next) => {
       message: 'Not Found Api',
       success: false,
       data: null,
-      count: 0,
-      _next: null,
     })
     return
   }
@@ -85,14 +83,16 @@ router.get('/:type', (req, res, next) => {
   res.json({
     message: 'success',
     success: true,
-    data: paged,
-    count: filteredList.length,
-    _next:
-      limit === paged.length &&
-      typeof nextCursor === 'number' &&
-      filteredList[filteredList.length - 1].id !== nextCursor
-        ? nextCursor
-        : null,
+    data: {
+      list: paged,
+      count: filteredList.length,
+      _next:
+        limit === paged.length &&
+        typeof nextCursor === 'number' &&
+        filteredList[filteredList.length - 1].id !== nextCursor
+          ? nextCursor
+          : null,
+    },
   })
 })
 export default router
